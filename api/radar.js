@@ -6,15 +6,15 @@ import { RECENT_HOLDERS_EXCLUDED } from '../lib/config.js';
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
   const username = await verifySession(req);
-  if (!username) return res.status(401).json({ error: 'unauthorized', message: 'Niet ingelogd.' });
+  if (!username) return res.status(401).json({ error: 'unauthorized', message: 'Not logged in.' });
   
   const ballId = req.query.ball;
-  if (!ballId) return res.status(400).json({ error: 'bad_request', message: 'Geen ball opgegeven.' });
+  if (!ballId) return res.status(400).json({ error: 'bad_request', message: 'No ball specified.' });
 
   // Verify holder
   const ballRes = await query('SELECT holder FROM balls WHERE id = $1 AND (state = $2 OR state = $3)', [ballId, 'held', 'spawned']);
   if (ballRes.rows.length === 0 || ballRes.rows[0].holder !== username) {
-    return res.status(403).json({ error: 'forbidden', message: 'Je hebt deze ball niet vast.' });
+    return res.status(403).json({ error: 'forbidden', message: 'You are not holding this ball.' });
   }
 
   // Get thrower info

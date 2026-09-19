@@ -27,7 +27,7 @@ self.addEventListener('fetch', (e) => {
 
 // Echte pushes van de server (later)
 self.addEventListener('push', (e) => {
-  let data = { title: 'The Ball', body: 'Er komt een ball aan.' };
+  let data = { title: 'The Ball', body: 'A ball is coming.' };
   try { if (e.data) data = { ...data, ...e.data.json() }; } catch (_) {}
   e.waitUntil(self.registration.showNotification(data.title, {
     body: data.body,

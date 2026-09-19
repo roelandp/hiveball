@@ -2,7 +2,7 @@ import { sql } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'method_not_allowed', message: 'Methode niet toegestaan' });
+    return res.status(405).json({ error: 'method_not_allowed', message: 'Method not allowed' });
   }
 
   const { id } = req.query;
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   try {
     const balls = await sql`SELECT * FROM balls WHERE id = ${id}`;
     if (balls.length === 0) {
-      return res.status(404).json({ error: 'not_found', message: 'Bal niet gevonden' });
+      return res.status(404).json({ error: 'not_found', message: 'Ball not found' });
     }
     
     const ball = balls[0];
@@ -19,6 +19,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ball, ops });
   } catch (err) {
     console.error('Ball fetch error:', err);
-    return res.status(500).json({ error: 'internal_error', message: 'Interne fout' });
+    return res.status(500).json({ error: 'internal_error', message: 'Internal error' });
   }
 }

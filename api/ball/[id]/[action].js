@@ -10,7 +10,7 @@ export const aimCache = new Map();
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   const username = await verifySession(req);
-  if (!username) return res.status(401).json({ error: 'unauthorized', message: 'Niet ingelogd.' });
+  if (!username) return res.status(401).json({ error: 'unauthorized', message: 'Not logged in.' });
   
   const { id: ballId, action } = req.query;
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     const ballRes = await query('SELECT holder FROM balls WHERE id = $1 AND (state = $2 OR state = $3)', [ballId, 'held', 'spawned']);
     if (ballRes.rows.length === 0 || ballRes.rows[0].holder !== username) {
-      return res.status(403).json({ error: 'forbidden', message: 'Je hebt deze ball niet vast.' });
+      return res.status(403).json({ error: 'forbidden', message: 'You are not holding this ball.' });
     }
 
     const throwerRes = await query('SELECT gh FROM players WHERE username = $1', [username]);
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         if (json.op === 'throw' && json.ball === ballId) throwOp = json;
       }
     }
-    if (!throwOp) return res.status(400).json({ error: 'bad_request', message: 'Geen geldige throw-operatie gevonden.' });
+    if (!throwOp) return res.status(400).json({ error: 'bad_request', message: 'No valid throw operation found.' });
 
     const lastAim = aimCache.get(ballId);
     if (!lastAim || (Date.now() - lastAim.ts > 120000)) return res.status(400).json({ error: 'aim_expired', message: 'Richting is verlopen, mik opnieuw.' });
@@ -61,11 +61,11 @@ export default async function handler(req, res) {
     if (result.result !== 'hit') return res.status(400).json({ error: 'bad_request', message: 'Je laatste mik was een plons.' });
     
     if (throwOp.to !== result.to || throwOp.cls !== result.cls || (Array.isArray(throwOp.also) ? throwOp.also.join(',') : '') !== (Array.isArray(result.also) ? result.also.join(',') : '')) {
-      return res.status(400).json({ error: 'aim_mismatch', message: 'Transactie komt niet overeen met laatste mik.' });
+      return res.status(400).json({ error: 'aim_mismatch', message: 'Transaction does not match last aim.' });
     }
 
     const ballRes = await query('SELECT holder FROM balls WHERE id = $1 AND (state = $2 OR state = $3)', [ballId, 'held', 'spawned']);
-    if (ballRes.rows.length === 0 || ballRes.rows[0].holder !== username) return res.status(403).json({ error: 'forbidden', message: 'Je hebt deze ball niet vast.' });
+    if (ballRes.rows.length === 0 || ballRes.rows[0].holder !== username) return res.status(403).json({ error: 'forbidden', message: 'You are not holding this ball.' });
 
     const pRes = await query('SELECT place FROM players WHERE username = $1', [username]);
     const place = pRes.rows.length > 0 ? pRes.rows[0].place : 'Onbekend';
@@ -94,10 +94,10 @@ export default async function handler(req, res) {
         if (json.op === 'catch' && json.ball === ballId) catchOp = json;
       }
     }
-    if (!catchOp) return res.status(400).json({ error: 'bad_request', message: 'Geen geldige catch-operatie gevonden.' });
+    if (!catchOp) return res.status(400).json({ error: 'bad_request', message: 'No valid catch operation found.' });
 
     const ballRes = await query('SELECT state, to_user, also, holder FROM balls WHERE id = $1', [ballId]);
-    if (ballRes.rows.length === 0) return res.status(404).json({ error: 'not_found', message: 'Ball niet gevonden.' });
+    if (ballRes.rows.length === 0) return res.status(404).json({ error: 'not_found', message: 'Ball not found.' });
     const ball = ballRes.rows[0];
 
     let canCatch = false;
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       if (allowed.includes(username)) canCatch = true;
     }
 
-    if (!canCatch) return res.status(403).json({ error: 'forbidden', message: 'Je kunt deze ball niet vangen.' });
+    if (!canCatch) return res.status(403).json({ error: 'forbidden', message: 'You cannot catch this ball.' });
 
     const prevHolder = ball.holder;
     const pRes = await query('SELECT place FROM players WHERE username = $1', [username]);
@@ -118,12 +118,12 @@ export default async function handler(req, res) {
       await client.broadcast.send(tx);
       await query(`UPDATE balls SET state = 'held', holder = $1, held_since = now(), throws = throws + 1, to_user = NULL, also = '{}', in_flight_since = NULL WHERE id = $2`, [username, ballId]);
       if (prevHolder) {
-        await sendPush(prevHolder, 'caught', ballId, { title: 'Gevangen!', body: `@${username} heeft hem gevangen in ${place}.` });
+        await sendPush(prevHolder, 'caught', ballId, { title: 'Caught!', body: `@${username} caught it in ${place}.` });
       }
       return res.status(200).json({ success: true });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ error: 'server_error', message: 'Er ging iets mis bij het vangen.' });
+      return res.status(500).json({ error: 'server_error', message: 'Something went wrong while catching.' });
     }
   }
 

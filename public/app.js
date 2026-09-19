@@ -61,7 +61,7 @@ $('btn-install').addEventListener('click', async () => {
   await deferredInstall.userChoice;
   deferredInstall = null;
 });
-window.addEventListener('appinstalled', () => { $('install-android').innerHTML = '<p class="dim">Geïnstalleerd. Open The Ball nu vanaf je beginscherm.</p>'; });
+window.addEventListener('appinstalled', () => { $('install-android').innerHTML = '<p class="dim">Installed. Open The Ball from your home screen.</p>'; });
 
 function gateInstall() {
   if (skipGates || isStandalone()) return gatePush();
@@ -85,18 +85,18 @@ async function gatePush() {
   if (skipGates) return gateSensors();
   if (!('Notification' in window) || !('PushManager' in window)) {
     show('s-push');
-    $('push-err').textContent = 'Deze browser ondersteunt geen meldingen. Op iPhone: alleen vanaf het beginscherm, iOS 16.4 of hoger.';
+    $('push-err').textContent = 'This browser does not support notifications. On iPhone: only from the home screen, iOS 16.4 or higher.';
     $('btn-push').disabled = true;
     return;
   }
   if (Notification.permission === 'granted' && localStorage.getItem('push-ok')) return gateSensors();
   show('s-push');
-  if (!CONFIG.VAPID_PUBLIC_KEY) $('push-note').textContent = 'Geen VAPID-key ingesteld: permissie wordt gevraagd, abonnement wordt overgeslagen.';
+  if (!CONFIG.VAPID_PUBLIC_KEY) $('push-note').textContent = 'No VAPID key set: permission requested, subscription skipped.';
 }
 $('btn-push').addEventListener('click', async () => {
   $('push-err').textContent = '';
   const perm = await Notification.requestPermission();
-  if (perm !== 'granted') { $('push-err').textContent = 'Zonder meldingen kun je niet meedoen. Zet ze aan in de instellingen van je telefoon.'; return; }
+  if (perm !== 'granted') { $('push-err').textContent = 'You cannot join without notifications. Enable them in your phone settings.'; return; }
   try {
     if (CONFIG.VAPID_PUBLIC_KEY && state.swReg) {
       const sub = await state.swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(CONFIG.VAPID_PUBLIC_KEY) });
@@ -104,7 +104,7 @@ $('btn-push').addEventListener('click', async () => {
     }
     localStorage.setItem('push-ok', '1');
     gateSensors();
-  } catch (e) { $('push-err').textContent = 'Abonneren mislukte: ' + e.message; }
+  } catch (e) { $('push-err').textContent = 'Subscription failed: ' + e.message; }
 });
 
 
@@ -120,12 +120,12 @@ $('btn-sensors').addEventListener('click', async () => {
     const r = CONFIG.ROUND_DEG;
     state.pos = { lat: Math.round(pos.coords.latitude / r) * r, lon: Math.round(pos.coords.longitude / r) * r };
     state.gh = encodeGeo(state.pos.lat, state.pos.lon, 3);
-    $('sensors-note').textContent = 'Je vak is: ' + state.gh;
+    $('sensors-note').textContent = 'Your grid is: ' + state.gh;
     
     startCompass();
     startMotion();
     setTimeout(() => gateHive(), 1000);
-  } catch (e) { $('sensors-err').textContent = e.message || 'Locatie mislukt.'; }
+  } catch (e) { $('sensors-err').textContent = e.message || 'Location failed.'; }
 });
 
 /* ---------- Gate 4: HiveAuth ---------- */
@@ -140,7 +140,7 @@ function gateHive() {
 }
 
 HAS.on('auth_req', (uri) => {
-  $('hive-status').textContent = 'Open je wallet-app (Keychain of HiveAuth) en keur de aanvraag goed. The Ball ziet nooit een key.';
+  $('hive-status').textContent = 'Open your wallet app (Keychain or HiveAuth) and approve the request. The Ball never sees a key.';
   window.location.href = uri;
 });
 
@@ -151,19 +151,19 @@ HAS.on('auth_success', async () => {
     
     const ops = [
       ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'follow', json: JSON.stringify(['follow', {follower: state.user, following: 'theball', what: ['blog']}]) }],
-      ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'register', gh: state.gh, place: 'Mijn Locatie', nonce }) }]
+      ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'register', gh: state.gh, place: 'My Location', nonce }) }]
     ];
-    $('hive-status').textContent = 'Keur nu de registratie transactie goed...';
+    $('hive-status').textContent = 'Now approve the registration transaction...';
     HAS.sign(ops, false);
-  } catch(e) { $('hive-err').textContent = 'Fout bij voorbereiden transactie: ' + e.message; }
+  } catch(e) { $('hive-err').textContent = 'Error preparing transaction: ' + e.message; }
 });
 
 HAS.on('sign_wait', () => {
-  $('hive-status').textContent = 'Wachten op goedkeuring van de transactie in je wallet...';
+  $('hive-status').textContent = 'Waiting for transaction approval in your wallet...';
 });
 
 HAS.on('sign_success', async (signedTx) => {
-  $('hive-status').textContent = 'Transactie ondertekend, doorsturen naar server...';
+  $('hive-status').textContent = 'Transaction signed, forwarding to server...';
   try {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
@@ -171,7 +171,7 @@ HAS.on('sign_success', async (signedTx) => {
       body: JSON.stringify({ username: state.user, tx: signedTx })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Registratie mislukt');
+    if (!res.ok) throw new Error(data.message || 'Registration failed');
     
     localStorage.setItem('session-token', data.token);
     localStorage.setItem('hive-user', data.player);
@@ -198,7 +198,7 @@ HAS.on('error', (err) => {
 $('btn-hive').addEventListener('click', async () => {
   const name = $('hive-user').value.trim().toLowerCase().replace(/^@/, '');
   $('hive-err').textContent = '';
-  if (!/^[a-z][a-z0-9\-.]{2,15}$/.test(name)) { $('hive-err').textContent = 'Dat is geen geldige Hive-naam.'; return; }
+  if (!/^[a-z][a-z0-9\-.]{2,15}$/.test(name)) { $('hive-err').textContent = 'That is not a valid Hive name.'; return; }
   $('btn-hive').disabled = true;
   state.user = name;
   HAS.auth(name);
@@ -248,7 +248,7 @@ function startCompass() {
     if (h === null) return;
     state.heading = h; state.headingSrc = src;
     $('hdg').textContent = Math.round(h);
-    $('hdg-src').textContent = src === 'rel' ? 'niet-absoluut' : '';
+    $('hdg-src').textContent = src === 'rel' ? 'non-absolute' : '';
     $('ring').style.transform = 'rotate(' + (-h) + 'deg)';
   };
   if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', onOri, true);
@@ -276,13 +276,13 @@ function startMotion() {
 }
 
 $('btn-arm').addEventListener('click', () => {
-  if (state.heading === null) { $('status').textContent = 'Nog geen kompaswaarde. Beweeg je telefoon in een 8.'; return; }
+  if (state.heading === null) { $('status').textContent = 'No compass value yet. Move your phone in a figure 8.'; return; }
   peak = 0; peakHeading = null;
   state.armed = true;
   $('result').hidden = true;
   $('ball').classList.remove('thrown');
   $('btn-arm').disabled = true;
-  $('status').textContent = 'Telefoon vasthouden. Gooi.';
+  $('status').textContent = 'Hold phone. Throw.';
   if (navigator.vibrate) navigator.vibrate(60);
 });
 
@@ -302,7 +302,7 @@ function finishThrow() {
 
   $('ball').classList.add('thrown');
   if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-  $('status').textContent = 'Gegooid. Bezig met vliegen...';
+  $('status').textContent = 'Thrown. Flying...';
   
   const toLat = match.catcher ? match.catcher.lat : land.lat;
   const toLon = match.catcher ? match.catcher.lon : land.lon;
@@ -323,29 +323,29 @@ function showThrowResult(bearing, peak, km, land, match) {
   $('r-peak').textContent = peak.toFixed(1) + ' m/s²';
   $('r-dist').textContent = Math.round(km) + ' km';
   $('r-land').innerHTML = land.lat.toFixed(2) + ', ' + land.lon.toFixed(2) +
-    ' <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=' + land.lat.toFixed(4) + '&mlon=' + land.lon.toFixed(4) + '#map=4/' + land.lat.toFixed(2) + '/' + land.lon.toFixed(2) + '">kaart</a>';
+    ' <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=' + land.lat.toFixed(4) + '&mlon=' + land.lon.toFixed(4) + '#map=4/' + land.lat.toFixed(2) + '/' + land.lon.toFixed(2) + '">map</a>';
   if (match.catcher) {
-    $('status').textContent = 'Geland!';
-    $('catch').textContent = 'Gevangen door @' + match.catcher.name + ' in ' + match.catcher.city;
-    $('r-catcher').textContent = '@' + match.catcher.name + ', ' + Math.round(match.dist) + ' km, afwijking ' + Math.round(match.off) + '°';
-    $('r-cone').textContent = match.inCone ? match.count + ' vangers in de kegel van ±' + CONFIG.CONE_DEG + '°.' :
-      'Niemand in de kegel. De ball rolde door naar de dichtstbijzijnde vanger in die richting.';
+    $('status').textContent = 'Landed!';
+    $('catch').textContent = 'Caught by @' + match.catcher.name + ' in ' + match.catcher.city;
+    $('r-catcher').textContent = '@' + match.catcher.name + ', ' + Math.round(match.dist) + ' km, deviation ' + Math.round(match.off) + '°';
+    $('r-cone').textContent = match.inCone ? match.count + ' catchers in the cone of ±' + CONFIG.CONE_DEG + '°.' :
+      'No one in the cone. The ball rolled to the nearest catcher in that direction.';
   } else {
-    $('status').textContent = 'Plons. Gooi opnieuw.';
-    $('catch').textContent = 'Niemand daar. De ball ligt in het water.';
-    $('r-catcher').textContent = 'geen';
+    $('status').textContent = 'Splash. Throw again.';
+    $('catch').textContent = 'No one there. The ball is in the water.';
+    $('r-catcher').textContent = 'none';
     $('r-cone').textContent = '';
   }
   $('result').hidden = false;
   $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-$('btn-again').addEventListener('click', () => { $('result').hidden = true; $('ball').classList.remove('thrown'); $('status').textContent = 'Draai je in de richting waar je heen wilt gooien.'; window.scrollTo({ top: 0, behavior: 'smooth' }); });
+$('btn-again').addEventListener('click', () => { $('result').hidden = true; $('ball').classList.remove('thrown'); $('status').textContent = 'Turn in the direction you want to throw.'; window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
 $('btn-notify').addEventListener('click', () => {
-  if (state.swReg && state.swReg.active) state.swReg.active.postMessage({ type: 'local-notify', title: 'Er komt een ball aan', body: 'Vang hem binnen 12 uur.' });
-  else if ('Notification' in window && Notification.permission === 'granted') new Notification('Er komt een ball aan', { body: 'Vang hem binnen 12 uur.' });
-  else $('status').textContent = 'Geen melding mogelijk (service worker of permissie ontbreekt).';
+  if (state.swReg && state.swReg.active) state.swReg.active.postMessage({ type: 'local-notify', title: 'A ball is coming', body: 'Catch it within 12 hours.' });
+  else if ('Notification' in window && Notification.permission === 'granted') new Notification('A ball is coming', { body: 'Catch it within 12 hours.' });
+  else $('status').textContent = 'No notification possible (service worker or permission missing).';
 });
 
 /* ---------- Geo ---------- */
@@ -368,7 +368,7 @@ function distKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 function angleDiff(a, b) { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
-function compassName(b) { return ['N', 'NO', 'O', 'ZO', 'Z', 'ZW', 'W', 'NW'][Math.round(b / 45) % 8]; }
+function compassName(b) { return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(b / 45) % 8]; }
 
 function pickCatcher(from, brg, km) {
   const all = CATCHERS.filter((c) => c.name !== state.user).map((c) => {
@@ -403,7 +403,7 @@ $('btn-catch').addEventListener('click', async () => {
   $('home-err').textContent = '';
   try {
     const ops = [
-      ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'catch', ball: state.ball.id, place: 'Locatie' }) }]
+      ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'catch', ball: state.ball.id, place: 'Location' }) }]
     ];
     HAS.sign(ops, false);
   } catch (e) {

@@ -31,14 +31,14 @@ export default async function handler(req, res) {
             if (json.op === 'register') registerOp = json;
           }
         }
-        if (!registerOp) return res.status(400).json({ error: 'missing_register', message: 'Geen register-operatie gevonden.' });
+        if (!registerOp) return res.status(400).json({ error: 'missing_register', message: 'No register operation found.' });
         
         if (registerOp.nonce) {
           const nonceRes = await query('DELETE FROM nonces WHERE nonce = $1 RETURNING nonce', [registerOp.nonce]);
           if (nonceRes.rows.length === 0) return res.status(400).json({ error: 'invalid_nonce', message: 'Ongeldige of verlopen nonce.' });
         } else {
           const sessUser = await verifySession(req);
-          if (sessUser !== username) return res.status(401).json({ error: 'unauthorized', message: 'Geen geldige sessie voor locatie-update.' });
+          if (sessUser !== username) return res.status(401).json({ error: 'unauthorized', message: 'No valid session for location update.' });
         }
 
         await client.broadcast.send(tx);

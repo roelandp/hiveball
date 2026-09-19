@@ -4,10 +4,10 @@ import { verifySession } from '../lib/session.js';
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
   const username = await verifySession(req);
-  if (!username) return res.status(401).json({ error: 'unauthorized', message: 'Niet ingelogd.' });
+  if (!username) return res.status(401).json({ error: 'unauthorized', message: 'Not logged in.' });
   
   const pRes = await query('SELECT username, gh, place, active FROM players WHERE username = $1', [username]);
-  if (pRes.rows.length === 0) return res.status(404).json({ error: 'not_found', message: 'Speler niet gevonden.' });
+  if (pRes.rows.length === 0) return res.status(404).json({ error: 'not_found', message: 'Player not found.' });
   const player = pRes.rows[0];
   
   const bRes = await query(`SELECT id, name, color, state, holder, to_user FROM balls WHERE state IN ('spawned', 'in_flight', 'loose', 'held')`);

@@ -4,12 +4,12 @@ import { sql } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'method_not_allowed', message: 'Methode niet toegestaan' });
+    return res.status(405).json({ error: 'method_not_allowed', message: 'Method not allowed' });
   }
 
   const providedSecret = req.headers['x-admin-secret'];
   if (providedSecret !== ADMIN_SECRET) {
-    return res.status(401).json({ error: 'unauthorized', message: 'Niet geautoriseerd' });
+    return res.status(401).json({ error: 'unauthorized', message: 'Unauthorized' });
   }
 
   try {
@@ -39,6 +39,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, ball: nextId });
   } catch (err) {
     console.error('Spawn error:', err);
-    return res.status(500).json({ error: 'internal_error', message: 'Interne fout' });
+    return res.status(500).json({ error: 'internal_error', message: 'Internal error' });
   }
 }

@@ -85,7 +85,7 @@ class HiveAuth {
 
   send(payload) {
     if (!this.ws || this.ws.readyState !== 1) {
-      this.emit('error', 'Niet verbonden met HiveAuth.');
+      this.emit('error', 'Not connected to HiveAuth.');
       return;
     }
     this.ws.send(JSON.stringify(payload));

@@ -23,7 +23,7 @@ window.initGlobe = function(container, fromLat, fromLon, toLat, toLon, splash, o
     scene.add(globe);
 
     const ballGeo = new THREE.SphereGeometry(0.02, 8, 8);
-    const ballMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const ballMat = new THREE.MeshBasicMaterial({ color: 0xE31337 });
     ballMesh = new THREE.Mesh(ballGeo, ballMat);
     scene.add(ballMesh);
   } else {

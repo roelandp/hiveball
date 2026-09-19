@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
@@ -9,15 +9,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#141828">
+<meta name="theme-color" content="#121212">
 <style>
   :root {
-    --bg: #141828;
-    --ink: #eef0f6;
-    --dim: #8b91a8;
-    --ball: #f5a028;
-    --ball-hi: #ffdc96;
-    --line: #2a3050;
+    --bg: #121212;
+    --ink: #ffffff;
+    --dim: #a0a0a0;
+    --ball: #E31337;
+    --ball-hi: #ff4d6a;
+    --line: #333333;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
@@ -31,18 +31,18 @@
   .step.on { display: block; animation: rise .35s ease-out; }
   @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .step.on { animation: none; } }
-  button { appearance: none; border: 0; border-radius: 999px; background: var(--ball); color: #1a1000;
+  button { appearance: none; border: 0; border-radius: 999px; background: var(--ball); color: #ffffff;
     font: inherit; font-weight: 700; padding: 15px 26px; margin: 10px 0 0; cursor: pointer; width: 100%; }
   button.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); font-weight: 500; }
   button:disabled { opacity: .45; }
   button:focus-visible { outline: 3px solid var(--ball-hi); outline-offset: 2px; }
   input { width: 100%; font: inherit; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--line);
-    background: #0f1220; color: var(--ink); margin-top: 6px; }
+    background: #1a1a1a; color: var(--ink); margin-top: 6px; }
   input:focus { outline: none; border-color: var(--ball); }
   .note { font-size: 14px; color: var(--dim); margin-top: 18px; }
   .err { color: #ff8a7a; font-size: 14px; margin-top: 12px; min-height: 1.2em; }
-  code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #0f1220; padding: 2px 6px; border-radius: 6px; }
-  pre { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: #0f1220; padding: 12px; border-radius: 12px;
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #1a1a1a; padding: 2px 6px; border-radius: 6px; }
+  pre { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: #1a1a1a; padding: 12px; border-radius: 12px;
     white-space: pre-wrap; word-break: break-all; color: var(--dim); max-height: 150px; overflow: auto; }
 
   /* Het kompas: het enige grote ding op de gooipagina */
@@ -55,14 +55,14 @@
   .dial .ring span.s { top: auto; bottom: 10px; }
   .dial .ring span.w { top: 50%; left: 10px; transform: translateY(-50%); }
   .dial .ball { position: absolute; left: 50%; top: 50%; width: 26%; aspect-ratio: 1; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, var(--ball-hi), var(--ball) 55%, #a8600e); transform: translate(-50%, -50%);
-    box-shadow: 0 10px 30px rgba(245,160,40,.35); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+    background: radial-gradient(circle at 35% 30%, var(--ball-hi), var(--ball) 55%, #7a0518); transform: translate(-50%, -50%);
+    box-shadow: 0 10px 30px rgba(227,19,55,.35); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
   .dial .ball.thrown { transform: translate(-50%, -50%) scale(.15); opacity: .3; }
   .dial .arrow { position: absolute; left: 50%; top: 6px; width: 0; height: 0; transform: translateX(-50%);
     border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid var(--ball); }
   .heading { text-align: center; font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 0; }
   .heading small { font-size: 15px; color: var(--dim); font-weight: 500; margin-left: 6px; }
-  .power { height: 8px; border-radius: 4px; background: #0f1220; margin: 16px 0 6px; overflow: hidden; }
+  .power { height: 8px; border-radius: 4px; background: #1a1a1a; margin: 16px 0 6px; overflow: hidden; }
   .power i { display: block; height: 100%; width: 0; background: var(--ball); transition: width .08s; }
   .status { text-align: center; color: var(--dim); font-size: 15px; min-height: 1.4em; }
 
@@ -77,48 +77,48 @@
 </style>
 </head>
 <body>
-<h1>The Ball, gooitest</h1>
+<h1>The Ball</h1>
 
-<!-- 1: PWA installatie -->
+<!-- 1: PWA installation -->
 <section class="step" id="s-install">
-  <h2>Zet The Ball eerst op je beginscherm.</h2>
-  <p>Vangen kan alleen vanuit de geïnstalleerde app. Dat is nodig voor meldingen.</p>
+  <h2>First add The Ball to your home screen.</h2>
+  <p>Catching is only possible from the installed app. This is required for notifications.</p>
   <div id="install-android" hidden>
-    <button id="btn-install">Installeer The Ball</button>
+    <button id="btn-install">Install The Ball</button>
   </div>
   <div id="install-ios" hidden>
-    <p class="dim">Safari: tik op <strong>Delen</strong> en dan <strong>Zet op beginscherm</strong>. Open daarna The Ball vanaf je beginscherm.</p>
+    <p class="dim">Safari: tap <strong>Share</strong> then <strong>Add to Home Screen</strong>. Open The Ball from your home screen.</p>
   </div>
   <div id="install-other" hidden>
-    <p class="dim">Open deze pagina in Safari (iPhone) of Chrome (Android) en zet hem op je beginscherm.</p>
+    <p class="dim">Open this page in Safari (iPhone) or Chrome (Android) and add it to your home screen.</p>
   </div>
 </section>
 
 <!-- 2: Push -->
 <section class="step" id="s-push">
-  <h2>Je wilt weten wanneer de ball op je af komt.</h2>
-  <p>Zonder meldingen kun je niet vangen. Je krijgt alleen een melding als er een ball richting jou vliegt.</p>
-  <button id="btn-push">Meldingen aanzetten</button>
+  <h2>You want to know when the ball comes towards you.</h2>
+  <p>You cannot catch without notifications. You will only receive a notification if a ball flies towards you.</p>
+  <button id="btn-push">Enable notifications</button>
   <div class="err" id="push-err"></div>
   <p class="note" id="push-note"></p>
 </section>
 
 <!-- 3: Locatie -->
 <section class="step" id="s-sensors">
-  <h2>Locatie</h2>
-  <p>Je locatie wordt afgerond tot een groot vak (geohash 3, ~156 km).</p>
-  <button id="btn-sensors">Locatie bepalen</button>
+  <h2>Location</h2>
+  <p>Your location is rounded to a large grid (geohash 3, ~156 km).</p>
+  <button id="btn-sensors">Determine location</button>
   <div class="err" id="sensors-err"></div>
   <p class="note" id="sensors-note"></p>
 </section>
 
 <!-- 4: HiveAuth -->
 <section class="step" id="s-hive">
-  <h2>Inloggen met Hive</h2>
-  <p>The Ball gebruikt je posting key. Je moet deze actie goedkeuren in je wallet app (HiveAuth/Keychain).</p>
-  <label for="hive-user" class="dim">Hive-gebruikersnaam</label>
+  <h2>Login with Hive</h2>
+  <p>The Ball uses your posting key. You must approve this action in your wallet app (HiveAuth/Keychain).</p>
+  <label for="hive-user" class="dim">Hive username</label>
   <input id="hive-user" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="roelandp">
-  <button id="btn-hive">Inloggen en meedoen</button>
+  <button id="btn-hive">Login and join</button>
   <div class="err" id="hive-err"></div>
   <p class="note" id="hive-status"></p>
   <div id="hive-qr" style="margin-top: 15px;"></div>
@@ -127,54 +127,54 @@
 
 <section class="step" id="s-home">
   <div id="home-no-ball" hidden>
-    <h2>Geen ball</h2>
-    <p id="no-ball-info">Er is nu geen ball bij jou in de buurt.</p>
+    <h2>No ball</h2>
+    <p id="no-ball-info">There is currently no ball near you.</p>
   </div>
   <div id="home-incoming" hidden>
-    <h2>Vangen</h2>
+    <h2>Catch</h2>
     <p id="incoming-info"></p>
-    <button id="btn-catch">Vangen</button>
+    <button id="btn-catch">Catch</button>
   </div>
   <div id="home-holder" hidden>
-    <h2>Jij hebt de ball</h2>
+    <h2>You have the ball</h2>
     <p id="holder-info"></p>
-    <button id="btn-go-throw">Gooien</button>
+    <button id="btn-go-throw">Throw</button>
   </div>
   <div id="home-loose" hidden>
-    <h2>Losse ball</h2>
-    <p>Eerste tik vangt.</p>
-    <button id="btn-catch-loose">Vangen</button>
+    <h2>Loose ball</h2>
+    <p>First tap catches.</p>
+    <button id="btn-catch-loose">Catch</button>
   </div>
   <div class="err" id="home-err"></div>
 </section>
 
-<!-- 5: Gooien -->
+<!-- 5: Throwing -->
 <section class="step" id="s-throw">
   <p class="dim" id="who"></p>
   <div class="dial">
     <div class="arrow"></div>
-    <div class="ring" id="ring"><span class="n">N</span><span class="e">O</span><span class="s">Z</span><span class="w">W</span></div>
+    <div class="ring" id="ring"><span class="n">N</span><span class="e">E</span><span class="s">S</span><span class="w">W</span></div>
     <div class="ball" id="ball"></div>
   </div>
   <p class="heading"><span id="hdg">0</span>°<small id="hdg-src"></small></p>
   <div class="power"><i id="power"></i></div>
-  <p class="status" id="status">Draai je in de richting waar je heen wilt gooien.</p>
-  <button id="btn-arm">Klaar om te gooien</button>
+  <p class="status" id="status">Turn in the direction you want to throw.</p>
+  <button id="btn-arm">Ready to throw</button>
 
   <div id="globe-container" style="width:100%;height:300px;display:none;"></div>
   <div class="result" id="result" hidden>
     <p class="catch" id="catch"></p>
     <dl>
-      <dt>Richting</dt><dd id="r-bearing"></dd>
-      <dt>Piekversnelling</dt><dd id="r-peak"></dd>
-      <dt>Worpafstand</dt><dd id="r-dist"></dd>
+      <dt>Direction</dt><dd id="r-bearing"></dd>
+      <dt>Peak acceleration</dt><dd id="r-peak"></dd>
+      <dt>Throw distance</dt><dd id="r-dist"></dd>
       <dt>Landing</dt><dd id="r-land"></dd>
-      <dt>Vanger</dt><dd id="r-catcher"></dd>
+      <dt>Catcher</dt><dd id="r-catcher"></dd>
     </dl>
     <p class="note" id="r-cone"></p>
     <div class="row">
-      <button class="ghost" id="btn-again">Nog een keer</button>
-      <button class="ghost" id="btn-notify">Test melding</button>
+      <button class="ghost" id="btn-again">Again</button>
+      <button class="ghost" id="btn-notify">Test notification</button>
     </div>
   </div>
 </section>

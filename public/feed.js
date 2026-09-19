@@ -15,7 +15,7 @@ function initMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
-  pathLayer = L.polyline([], {color: '#007aff'}).addTo(map);
+  pathLayer = L.polyline([], {color: '#E31337'}).addTo(map);
 }
 
 async function loadBalls() {
@@ -84,14 +84,14 @@ function getSentence(op) {
   const user = `<strong>@${op.username}</strong>`;
   const j = op.json;
   switch (op.op) {
-    case 'spawn': return `Bal <strong>${op.ball_name}</strong> is gespawnd in ${j.origin}.`;
-    case 'register': return `${user} heeft zich geregistreerd vanuit ${j.place}.`;
-    case 'drop': return `${user} is gedropt wegens ${j.reason}.`;
-    case 'throw': return `${user} gooide de bal naar <strong>@${j.to}</strong>.`;
-    case 'catch': return `${user} ving de bal in ${j.place || 'onbekend'}.`;
-    case 'bounce': return `Bal stuitert terug van <strong>@${j.from}</strong> naar <strong>@${j.back_to}</strong>.`;
-    case 'dead': return `Bal is dood bij <strong>@${j.holder}</strong> na ${j.throws} worpen.`;
-    default: return `${user} deed ${op.op}.`;
+    case 'spawn': return `Ball <strong>${op.ball_name}</strong> spawned in ${j.origin}.`;
+    case 'register': return `${user} registered from ${j.place}.`;
+    case 'drop': return `${user} was dropped due to ${j.reason}.`;
+    case 'throw': return `${user} threw the ball to <strong>@${j.to}</strong>.`;
+    case 'catch': return `${user} caught the ball in ${j.place || 'unknown'}.`;
+    case 'bounce': return `Ball bounces back from <strong>@${j.from}</strong> to <strong>@${j.back_to}</strong>.`;
+    case 'dead': return `Ball is dead at <strong>@${j.holder}</strong> after ${j.throws} throws.`;
+    default: return `${user} did ${op.op}.`;
   }
 }
 
@@ -104,7 +104,7 @@ function renderFeed(ops) {
     if (op.ball_color) {
       div.style.borderLeftColor = op.ball_color;
     }
-    const d = new Date(op.ts).toLocaleString('nl-NL');
+    const d = new Date(op.ts).toLocaleString('en-US');
     div.innerHTML = `
       <div>${getSentence(op)}</div>
       <div class="time">${d} - <a href="https://hiveblocks.com/tx/${op.trx_id}" target="_blank">${op.trx_id ? op.trx_id.substring(0, 8) + '...' : 'pending'}</a></div>
