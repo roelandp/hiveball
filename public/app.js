@@ -302,18 +302,36 @@ function finishThrow() {
 
   $('ball').classList.add('thrown');
   if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-  $('status').textContent = 'Gegooid.';
+  $('status').textContent = 'Gegooid. Bezig met vliegen...';
+  
+  const toLat = match.catcher ? match.catcher.lat : land.lat;
+  const toLon = match.catcher ? match.catcher.lon : land.lon;
+  const isSplash = !match.catcher;
+  
+  $('globe-container').style.display = 'block';
+  if (window.initGlobe) {
+    window.initGlobe($('globe-container'), state.pos.lat, state.pos.lon, toLat, toLon, isSplash, () => {
+      showThrowResult(bearing, peak, km, land, match);
+    });
+  } else {
+    showThrowResult(bearing, peak, km, land, match);
+  }
+}
+
+function showThrowResult(bearing, peak, km, land, match) {
   $('r-bearing').textContent = Math.round(bearing) + '° (' + compassName(bearing) + ')';
   $('r-peak').textContent = peak.toFixed(1) + ' m/s²';
   $('r-dist').textContent = Math.round(km) + ' km';
   $('r-land').innerHTML = land.lat.toFixed(2) + ', ' + land.lon.toFixed(2) +
     ' <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=' + land.lat.toFixed(4) + '&mlon=' + land.lon.toFixed(4) + '#map=4/' + land.lat.toFixed(2) + '/' + land.lon.toFixed(2) + '">kaart</a>';
   if (match.catcher) {
+    $('status').textContent = 'Geland!';
     $('catch').textContent = 'Gevangen door @' + match.catcher.name + ' in ' + match.catcher.city;
     $('r-catcher').textContent = '@' + match.catcher.name + ', ' + Math.round(match.dist) + ' km, afwijking ' + Math.round(match.off) + '°';
     $('r-cone').textContent = match.inCone ? match.count + ' vangers in de kegel van ±' + CONFIG.CONE_DEG + '°.' :
       'Niemand in de kegel. De ball rolde door naar de dichtstbijzijnde vanger in die richting.';
   } else {
+    $('status').textContent = 'Plons. Gooi opnieuw.';
     $('catch').textContent = 'Niemand daar. De ball ligt in het water.';
     $('r-catcher').textContent = 'geen';
     $('r-cone').textContent = '';

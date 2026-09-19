@@ -18,3 +18,29 @@ function encodeGeo(lat, lon, precision) {
   }
   return hash;
 }
+
+function decodeGeo(hash) {
+  let isEven = true;
+  const lat = [-90.0, 90.0];
+  const lon = [-180.0, 180.0];
+  let latErr = 90.0, lonErr = 180.0;
+  for (let i = 0; i < hash.length; i++) {
+    const c = hash[i];
+    const cd = BASE32.indexOf(c);
+    for (let j = 0; j < 5; j++) {
+      const mask = [16, 8, 4, 2, 1][j];
+      if (isEven) {
+        lonErr /= 2;
+        if (cd & mask) lon[0] = (lon[0] + lon[1]) / 2;
+        else lon[1] = (lon[0] + lon[1]) / 2;
+      } else {
+        latErr /= 2;
+        if (cd & mask) lat[0] = (lat[0] + lat[1]) / 2;
+        else lat[1] = (lat[0] + lat[1]) / 2;
+      }
+      isEven = !isEven;
+    }
+  }
+  return { lat: (lat[0] + lat[1]) / 2, lon: (lon[0] + lon[1]) / 2 };
+}
+
