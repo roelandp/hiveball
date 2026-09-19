@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>The Ball</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#141828">
+<style>
+  :root {
+    --bg: #141828;
+    --ink: #eef0f6;
+    --dim: #8b91a8;
+    --ball: #f5a028;
+    --ball-hi: #ffdc96;
+    --line: #2a3050;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font: 17px/1.45 "Avenir Next", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { padding: max(24px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom)); overscroll-behavior: none; }
+  h1 { font-size: 15px; font-weight: 600; letter-spacing: .04em; margin: 0 0 40px; color: var(--dim); }
+  h2 { font-size: 30px; line-height: 1.15; font-weight: 700; margin: 0 0 14px; }
+  p { margin: 0 0 14px; max-width: 34ch; }
+  .dim { color: var(--dim); }
+  .step { display: none; }
+  .step.on { display: block; animation: rise .35s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .step.on { animation: none; } }
+  button { appearance: none; border: 0; border-radius: 999px; background: var(--ball); color: #1a1000;
+    font: inherit; font-weight: 700; padding: 15px 26px; margin: 10px 0 0; cursor: pointer; width: 100%; }
+  button.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); font-weight: 500; }
+  button:disabled { opacity: .45; }
+  button:focus-visible { outline: 3px solid var(--ball-hi); outline-offset: 2px; }
+  input { width: 100%; font: inherit; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--line);
+    background: #0f1220; color: var(--ink); margin-top: 6px; }
+  input:focus { outline: none; border-color: var(--ball); }
+  .note { font-size: 14px; color: var(--dim); margin-top: 18px; }
+  .err { color: #ff8a7a; font-size: 14px; margin-top: 12px; min-height: 1.2em; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #0f1220; padding: 2px 6px; border-radius: 6px; }
+  pre { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: #0f1220; padding: 12px; border-radius: 12px;
+    white-space: pre-wrap; word-break: break-all; color: var(--dim); max-height: 150px; overflow: auto; }
+
+  /* Het kompas: het enige grote ding op de gooipagina */
+  .dial { position: relative; width: min(78vw, 320px); aspect-ratio: 1; margin: 18px auto 10px; border-radius: 50%;
+    border: 1.5px solid var(--line); }
+  .dial .ring { position: absolute; inset: 0; border-radius: 50%; transition: transform .12s linear; }
+  .dial .ring span { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); font-size: 13px; color: var(--dim); font-weight: 600; }
+  .dial .ring span.n { color: var(--ink); }
+  .dial .ring span.e { top: 50%; left: auto; right: 10px; transform: translateY(-50%); }
+  .dial .ring span.s { top: auto; bottom: 10px; }
+  .dial .ring span.w { top: 50%; left: 10px; transform: translateY(-50%); }
+  .dial .ball { position: absolute; left: 50%; top: 50%; width: 26%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--ball-hi), var(--ball) 55%, #a8600e); transform: translate(-50%, -50%);
+    box-shadow: 0 10px 30px rgba(245,160,40,.35); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+  .dial .ball.thrown { transform: translate(-50%, -50%) scale(.15); opacity: .3; }
+  .dial .arrow { position: absolute; left: 50%; top: 6px; width: 0; height: 0; transform: translateX(-50%);
+    border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid var(--ball); }
+  .heading { text-align: center; font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 0; }
+  .heading small { font-size: 15px; color: var(--dim); font-weight: 500; margin-left: 6px; }
+  .power { height: 8px; border-radius: 4px; background: #0f1220; margin: 16px 0 6px; overflow: hidden; }
+  .power i { display: block; height: 100%; width: 0; background: var(--ball); transition: width .08s; }
+  .status { text-align: center; color: var(--dim); font-size: 15px; min-height: 1.4em; }
+
+  .result { border-top: 1.5px solid var(--line); margin-top: 22px; padding-top: 18px; }
+  .result dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0 0 12px; font-size: 15px; }
+  .result dt { color: var(--dim); }
+  .result dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .catch { font-size: 22px; font-weight: 700; margin: 6px 0 12px; }
+  a { color: var(--ball-hi); }
+  .row { display: flex; gap: 10px; }
+  .row button { margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>The Ball, gooitest</h1>
+
+<!-- 1: PWA installatie -->
+<section class="step" id="s-install">
+  <h2>Zet The Ball eerst op je beginscherm.</h2>
+  <p>Vangen kan alleen vanuit de geïnstalleerde app. Dat is nodig voor meldingen.</p>
+  <div id="install-android" hidden>
+    <button id="btn-install">Installeer The Ball</button>
+  </div>
+  <div id="install-ios" hidden>
+    <p class="dim">Safari: tik op <strong>Delen</strong> en dan <strong>Zet op beginscherm</strong>. Open daarna The Ball vanaf je beginscherm.</p>
+  </div>
+  <div id="install-other" hidden>
+    <p class="dim">Open deze pagina in Safari (iPhone) of Chrome (Android) en zet hem op je beginscherm.</p>
+  </div>
+</section>
+
+<!-- 2: Push -->
+<section class="step" id="s-push">
+  <h2>Je wilt weten wanneer de ball op je af komt.</h2>
+  <p>Zonder meldingen kun je niet vangen. Je krijgt alleen een melding als er een ball richting jou vliegt.</p>
+  <button id="btn-push">Meldingen aanzetten</button>
+  <div class="err" id="push-err"></div>
+  <p class="note" id="push-note"></p>
+</section>
+
+<!-- 3: Locatie -->
+<section class="step" id="s-sensors">
+  <h2>Locatie</h2>
+  <p>Je locatie wordt afgerond tot een groot vak (geohash 3, ~156 km).</p>
+  <button id="btn-sensors">Locatie bepalen</button>
+  <div class="err" id="sensors-err"></div>
+  <p class="note" id="sensors-note"></p>
+</section>
+
+<!-- 4: HiveAuth -->
+<section class="step" id="s-hive">
+  <h2>Inloggen met Hive</h2>
+  <p>The Ball gebruikt je posting key. Je moet deze actie goedkeuren in je wallet app (HiveAuth/Keychain).</p>
+  <label for="hive-user" class="dim">Hive-gebruikersnaam</label>
+  <input id="hive-user" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="roelandp">
+  <button id="btn-hive">Inloggen en meedoen</button>
+  <div class="err" id="hive-err"></div>
+  <p class="note" id="hive-status"></p>
+  <div id="hive-qr" style="margin-top: 15px;"></div>
+</section>
+
+<!-- 5: Gooien -->
+<section class="step" id="s-throw">
+  <p class="dim" id="who"></p>
+  <div class="dial">
+    <div class="arrow"></div>
+    <div class="ring" id="ring"><span class="n">N</span><span class="e">O</span><span class="s">Z</span><span class="w">W</span></div>
+    <div class="ball" id="ball"></div>
+  </div>
+  <p class="heading"><span id="hdg">0</span>°<small id="hdg-src"></small></p>
+  <div class="power"><i id="power"></i></div>
+  <p class="status" id="status">Draai je in de richting waar je heen wilt gooien.</p>
+  <button id="btn-arm">Klaar om te gooien</button>
+
+  <div class="result" id="result" hidden>
+    <p class="catch" id="catch"></p>
+    <dl>
+      <dt>Richting</dt><dd id="r-bearing"></dd>
+      <dt>Piekversnelling</dt><dd id="r-peak"></dd>
+      <dt>Worpafstand</dt><dd id="r-dist"></dd>
+      <dt>Landing</dt><dd id="r-land"></dd>
+      <dt>Vanger</dt><dd id="r-catcher"></dd>
+    </dl>
+    <p class="note" id="r-cone"></p>
+    <div class="row">
+      <button class="ghost" id="btn-again">Nog een keer</button>
+      <button class="ghost" id="btn-notify">Test melding</button>
+    </div>
+  </div>
+</section>
+
+<script src="./vendor/crypto-js.min.js"></script>
+<script src="./has.js"></script>
+<script src="./geohash.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
