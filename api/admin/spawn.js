@@ -39,6 +39,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, ball: nextId });
   } catch (err) {
     console.error('Spawn error:', err);
-    return res.status(500).json({ error: 'internal_error', message: 'Internal error' });
+    return res.status(500).json({ error: 'internal_error', message: err.message });
   }
 }
