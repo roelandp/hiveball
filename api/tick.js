@@ -1,5 +1,6 @@
 import { tickIndexer } from '../lib/indexer.js';
 import { TICK_SECRET } from '../lib/config.js';
+import { runTimers } from '../lib/timers.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
 
   try {
     const indexerResult = await tickIndexer();
-    // TODO: M4 timers and liveness checks go here
+    await runTimers();
     return res.status(200).json({ success: true, indexer: indexerResult });
   } catch (err) {
     console.error('Tick error:', err);
