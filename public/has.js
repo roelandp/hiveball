@@ -95,7 +95,7 @@ class HiveAuth {
     this.account = account;
     this.authKey = CryptoJS.lib.WordArray.random(32).toString();
     const data = CryptoJS.AES.encrypt(JSON.stringify({ app: this.appData }), this.authKey).toString();
-    this.send({ cmd: 'auth_req', account, data, auth_key: this.authKey });
+    this.send({ cmd: 'auth_req', account, data,   });
   }
 
   sign(ops, broadcast = false) {
