@@ -65,7 +65,8 @@ class HiveAuth {
     } else if (msg.cmd === 'auth_nack') {
       this.emit('error', 'Login geweigerd.');
     } else if (msg.cmd === 'sign_wait') {
-      this.emit('sign_wait', msg.uuid);
+      const payload = btoa(JSON.stringify({ account: this.account, uuid: msg.uuid, key: this.authKey, host: this.server })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      this.emit('sign_wait', `has://auth_req/${payload}`);
     } else if (msg.cmd === 'sign_ack') {
       if (msg.data) {
         try {

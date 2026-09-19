@@ -145,21 +145,35 @@ HAS.on('auth_req', (uri) => {
 });
 
 HAS.on('auth_success', async () => {
+  $('hive-status').textContent = 'Wallet connected! Click below to sign the registration.';
+  $('btn-hive').style.display = 'none';
+  $('hive-user').style.display = 'none';
+  $('btn-register').style.display = 'block';
+});
+
+$('btn-register').addEventListener('click', async () => {
+  $('hive-status').textContent = 'Preparing transaction...';
+  $('btn-register').disabled = true;
   try {
     const nonceRes = await fetch('/api/auth/nonce');
+    if (!nonceRes.ok) throw new Error('Could not fetch nonce');
     const { nonce } = await nonceRes.json();
     
     const ops = [
       ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'follow', json: JSON.stringify(['follow', {follower: state.user, following: 'theball', what: ['blog']}]) }],
       ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'register', gh: state.gh, place: 'My Location', nonce }) }]
     ];
-    $('hive-status').textContent = 'Now approve the registration transaction...';
+    $('hive-status').textContent = 'Approve the registration transaction in your wallet...';
     HAS.sign(ops, false);
-  } catch(e) { $('hive-err').textContent = 'Error preparing transaction: ' + e.message; }
+  } catch(e) {
+    $('hive-err').textContent = 'Error preparing transaction: ' + e.message;
+    $('btn-register').disabled = false;
+  }
 });
 
-HAS.on('sign_wait', () => {
-  $('hive-status').textContent = 'Waiting for transaction approval in your wallet...';
+HAS.on('sign_wait', (uri) => {
+  $('hive-status').textContent = 'Open your wallet app again to approve the transaction.';
+  window.location.href = uri;
 });
 
 HAS.on('sign_success', async (signedTx) => {
