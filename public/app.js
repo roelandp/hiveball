@@ -216,8 +216,22 @@ async function goHome() {
       throw new Error(data.message);
     }
     
-    $('who').textContent = '@' + data.player.username + ' (' + data.player.gh + ')';
-    show('s-throw');
+    
+    state.ball = data.ball;
+    show('s-home');
+    ['home-no-ball', 'home-incoming', 'home-holder', 'home-loose'].forEach(id => $(id).hidden = true);
+    if (!data.ball) {
+      $('home-no-ball').hidden = false;
+    } else if (data.ball.role === 'incoming') {
+      $('home-incoming').hidden = false;
+    } else if (data.ball.role === 'holder') {
+      $('home-holder').hidden = false;
+    } else if (data.ball.role === 'loose') {
+      $('home-loose').hidden = false;
+    } else {
+      $('home-no-ball').hidden = false;
+    }
+  
   } catch(e) {
     console.error(e);
   }
@@ -361,3 +375,20 @@ function pickCatcher(from, brg, km) {
   }
   gateInstall();
 })();
+
+$('btn-go-throw').addEventListener('click', () => {
+  show('s-throw');
+  // Trigger radar logic here
+});
+
+$('btn-catch').addEventListener('click', async () => {
+  $('home-err').textContent = '';
+  try {
+    const ops = [
+      ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'catch', ball: state.ball.id, place: 'Locatie' }) }]
+    ];
+    HAS.sign(ops, false);
+  } catch (e) {
+    $('home-err').textContent = e.message;
+  }
+});

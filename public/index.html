@@ -124,6 +124,30 @@
   <div id="hive-qr" style="margin-top: 15px;"></div>
 </section>
 
+
+<section class="step" id="s-home">
+  <div id="home-no-ball" hidden>
+    <h2>Geen ball</h2>
+    <p id="no-ball-info">Er is nu geen ball bij jou in de buurt.</p>
+  </div>
+  <div id="home-incoming" hidden>
+    <h2>Vangen</h2>
+    <p id="incoming-info"></p>
+    <button id="btn-catch">Vangen</button>
+  </div>
+  <div id="home-holder" hidden>
+    <h2>Jij hebt de ball</h2>
+    <p id="holder-info"></p>
+    <button id="btn-go-throw">Gooien</button>
+  </div>
+  <div id="home-loose" hidden>
+    <h2>Losse ball</h2>
+    <p>Eerste tik vangt.</p>
+    <button id="btn-catch-loose">Vangen</button>
+  </div>
+  <div class="err" id="home-err"></div>
+</section>
+
 <!-- 5: Gooien -->
 <section class="step" id="s-throw">
   <p class="dim" id="who"></p>
@@ -157,6 +181,7 @@
 <script src="./vendor/crypto-js.min.js"></script>
 <script src="./has.js"></script>
 <script src="./geohash.js"></script>
+<script src="./throw.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>
