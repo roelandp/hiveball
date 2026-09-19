@@ -272,6 +272,7 @@ $('btn-hive').addEventListener('click', async () => {
 
 /* ---------- Home ---------- */
 async function goHome() {
+  updateUserInfo();
   const token = localStorage.getItem('session-token');
   try {
     fetch('/api/me/open', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
@@ -476,3 +477,27 @@ $('btn-catch').addEventListener('click', async () => {
     $('home-err').textContent = e.message;
   }
 });
+
+
+// Auto-refresh when app comes to foreground
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.user && $('s-home').style.display !== 'none') {
+    goHome();
+  }
+});
+window.addEventListener('focus', () => {
+  if (state.user && $('s-home').style.display !== 'none') {
+    goHome();
+  }
+});
+
+// Show logged in user
+function updateUserInfo() {
+  const el = $('user-info');
+  if (state.user) {
+    el.textContent = '@' + state.user;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
