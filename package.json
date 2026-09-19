@@ -3,8 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "20.x"
   },
   "scripts": {
     "migrate": "node db/migrate.js",
