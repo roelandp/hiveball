@@ -51,7 +51,7 @@ class HiveAuth {
   handleMessage(msg) {
     console.log('HAS msg', msg);
     if (msg.cmd === 'auth_wait') {
-      const payload = btoa(JSON.stringify({ account: this.account, uuid: msg.uuid, key: this.authKey, host: this.server }));
+      const payload = btoa(JSON.stringify({ account: this.account, uuid: msg.uuid, key: this.authKey, host: this.server })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       this.emit('auth_req', `has://auth_req/${payload}`);
     } else if (msg.cmd === 'auth_ack') {
       try {
