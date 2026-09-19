@@ -1,5 +1,5 @@
 import { query } from '../../../lib/db.js';
-import { verifyPostingSignature, client } from '../../../lib/hive.js';
+import { client, getOpFromHistory } from '../../../lib/hive.js';
 import { verifySession } from '../../../lib/session.js';
 import { sendPush } from '../../../lib/push.js';
 import { matcher } from '../../../lib/matcher.js';
@@ -41,17 +41,14 @@ export default async function handler(req, res) {
   }
 
   if (action === 'throw') {
-    const { tx } = req.body || {};
-    if (!tx) return res.status(400).json({ error: 'bad_request', message: 'Transactie ontbreekt.' });
-    const isValid = await verifyPostingSignature(tx, username);
-    if (!isValid) return res.status(401).json({ error: 'invalid_signature', message: 'Handtekening is ongeldig.' });
-
+    const { trx_id } = req.body || {};
+    if (!trx_id) return res.status(400).json({ error: 'bad_request', message: 'Transactie ontbreekt.' });
+    const op = await getOpFromHistory(username, trx_id);
+    if (!op) return res.status(400).json({ error: 'not_found', message: 'Transaction not found on chain.' });
     let throwOp = null;
-    for (const [opType, opData] of tx.operations) {
-      if (opType === 'custom_json' && opData.id === 'theball') {
-        const json = JSON.parse(opData.json);
-        if (json.op === 'throw' && json.ball === ballId) throwOp = json;
-      }
+    if (op[0] === 'custom_json' && op[1].id === 'theball') {
+      const json = JSON.parse(op[1].json);
+      if (json.op === 'throw' && json.ball === ballId) throwOp = json;
     }
     if (!throwOp) return res.status(400).json({ error: 'bad_request', message: 'No valid throw operation found.' });
 
@@ -71,7 +68,7 @@ export default async function handler(req, res) {
     const place = pRes.rows.length > 0 ? pRes.rows[0].place : 'Onbekend';
 
     try {
-      await client.broadcast.send(tx);
+      // already broadcasted
       await query(`UPDATE balls SET state = 'in_flight', to_user = $1, also = $2, in_flight_since = now(), reminders_sent = 0 WHERE id = $3`, [throwOp.to, throwOp.also || [], ballId]);
       await sendPush(throwOp.to, 'incoming', ballId, { title: 'Er komt een ball aan!', body: `Gegooid vanuit ${place}. Vang hem.` });
       return res.status(200).json({ success: true });
@@ -82,17 +79,14 @@ export default async function handler(req, res) {
   }
 
   if (action === 'catch') {
-    const { tx } = req.body || {};
-    if (!tx) return res.status(400).json({ error: 'bad_request', message: 'Transactie ontbreekt.' });
-    const isValid = await verifyPostingSignature(tx, username);
-    if (!isValid) return res.status(401).json({ error: 'invalid_signature', message: 'Handtekening is ongeldig.' });
-
+    const { trx_id } = req.body || {};
+    if (!trx_id) return res.status(400).json({ error: 'bad_request', message: 'Transactie ontbreekt.' });
+    const op = await getOpFromHistory(username, trx_id);
+    if (!op) return res.status(400).json({ error: 'not_found', message: 'Transaction not found on chain.' });
     let catchOp = null;
-    for (const [opType, opData] of tx.operations) {
-      if (opType === 'custom_json' && opData.id === 'theball') {
-        const json = JSON.parse(opData.json);
-        if (json.op === 'catch' && json.ball === ballId) catchOp = json;
-      }
+    if (op[0] === 'custom_json' && op[1].id === 'theball') {
+      const json = JSON.parse(op[1].json);
+      if (json.op === 'catch' && json.ball === ballId) catchOp = json;
     }
     if (!catchOp) return res.status(400).json({ error: 'bad_request', message: 'No valid catch operation found.' });
 
@@ -115,7 +109,7 @@ export default async function handler(req, res) {
     const place = pRes.rows.length > 0 ? pRes.rows[0].place : 'Onbekend';
 
     try {
-      await client.broadcast.send(tx);
+      // already broadcasted
       await query(`UPDATE balls SET state = 'held', holder = $1, held_since = now(), throws = throws + 1, to_user = NULL, also = '{}', in_flight_since = NULL WHERE id = $2`, [username, ballId]);
       if (prevHolder) {
         await sendPush(prevHolder, 'caught', ballId, { title: 'Caught!', body: `@${username} caught it in ${place}.` });

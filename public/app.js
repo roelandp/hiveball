@@ -164,7 +164,7 @@ $('btn-register').addEventListener('click', async () => {
       ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'register', gh: state.gh, place: 'My Location', nonce }) }]
     ];
     $('hive-status').textContent = 'Approve the registration transaction in your wallet...';
-    HAS.sign(ops, false);
+    state.pendingOps = ops; HAS.sign(ops, true);
   } catch(e) {
     $('hive-err').textContent = 'Error preparing transaction: ' + e.message;
     $('btn-register').disabled = false;
@@ -176,33 +176,85 @@ HAS.on('sign_wait', (uri) => {
   window.location.href = uri;
 });
 
-HAS.on('sign_success', async (signedTx) => {
-  $('hive-status').textContent = 'Transaction signed, forwarding to server...';
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: state.user, tx: signedTx })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Registration failed');
-    
-    localStorage.setItem('session-token', data.token);
-    localStorage.setItem('hive-user', data.player);
-    
-    // push sub now that we have a session token
-    const sub = localStorage.getItem('push-sub');
-    if (sub) {
-      await fetch('/api/me/push', {
+async function pollTransaction(username, opId, actionName) {
+  let attempts = 0;
+  while (attempts < 15) {
+    attempts++;
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const res = await fetch('https://api.hive.blog', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.token },
-        body: JSON.stringify({ subscription: JSON.parse(sub) })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc:"2.0", method:"condenser_api.get_account_history", params:[username, -1, 15], id:1 })
       });
+      const data = await res.json();
+      for (const [seq, tx] of data.result.reverse()) {
+        if (tx.op[0] === 'custom_json' && tx.op[1].id === opId) {
+          const json = JSON.parse(tx.op[1].json);
+          if (json.op === actionName) return tx.trx_id;
+        }
+      }
+    } catch(e) {}
+  }
+  throw new Error('Transaction not found on the blockchain.');
+}
+
+
+HAS.on('sign_success', async () => {
+  $('hive-status').textContent = 'Transaction broadcasted! Verifying on blockchain (this takes ~5 seconds)...';
+  try {
+    const actionMap = {
+      'register': { url: '/api/auth/register', method: 'POST', msg: 'Registration failed' },
+      'throw': { url: state.ball ? `/api/ball/${state.ball.id}/throw` : '', method: 'POST', msg: 'Throw failed' },
+      'catch': { url: state.ball ? `/api/ball/${state.ball.id}/catch` : '', method: 'POST', msg: 'Catch failed' }
+    };
+    
+    // Determine what action we just signed
+    let opType = 'register';
+    if (state.pendingOps && state.pendingOps.length > 0) {
+       const op = state.pendingOps[state.pendingOps.length - 1];
+       if (op[0] === 'custom_json') {
+         const json = JSON.parse(op[1].json);
+         opType = json.op;
+       }
     }
     
+    const trx_id = await pollTransaction(state.user, 'theball', opType);
+    
+    const conf = actionMap[opType];
+    if (conf && conf.url) {
+      const headers = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('session-token');
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      
+      const res = await fetch(conf.url, {
+        method: conf.method,
+        headers,
+        body: JSON.stringify(opType === 'register' ? { username: state.user, trx_id } : { trx_id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || conf.msg);
+      
+      if (opType === 'register') {
+        localStorage.setItem('session-token', data.token);
+        localStorage.setItem('hive-user', data.player);
+        const sub = localStorage.getItem('push-sub');
+        if (sub) {
+          await fetch('/api/me/push', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.token }, body: JSON.stringify({ subscription: JSON.parse(sub) }) });
+        }
+      }
+    }
+    
+    $('hive-status').textContent = '';
+    state.pendingOps = null;
     goHome();
-  } catch(e) { $('hive-err').textContent = e.message; }
+  } catch(e) { 
+    $('hive-err').textContent = e.message;
+    $('home-err').textContent = e.message;
+    if ($('btn-register')) $('btn-register').disabled = false;
+  }
 });
+
 
 HAS.on('error', (err) => {
   $('hive-err').textContent = err;
@@ -419,7 +471,7 @@ $('btn-catch').addEventListener('click', async () => {
     const ops = [
       ['custom_json', { required_auths: [], required_posting_auths: [state.user], id: 'theball', json: JSON.stringify({ v:1, op: 'catch', ball: state.ball.id, place: 'Location' }) }]
     ];
-    HAS.sign(ops, false);
+    state.pendingOps = ops; HAS.sign(ops, true);
   } catch (e) {
     $('home-err').textContent = e.message;
   }
