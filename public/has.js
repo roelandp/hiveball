@@ -71,8 +71,16 @@ class HiveAuth {
       if (msg.data) {
         try {
           const decrypted = CryptoJS.AES.decrypt(msg.data, this.authKey).toString(CryptoJS.enc.Utf8);
-          this.emit('sign_success', JSON.parse(decrypted));
-        } catch(e) { this.emit('error', 'Sign ack decrypt failed'); }
+          let parsed;
+          try {
+            parsed = JSON.parse(decrypted);
+          } catch(err) {
+            parsed = decrypted; // fallback if it's just a raw string like trx_id
+          }
+          this.emit('sign_success', parsed);
+        } catch(e) { 
+          this.emit('error', 'Sign ack decrypt failed (wrong key)'); 
+        }
       } else {
         this.emit('sign_success', { broadcasted: true });
       }
