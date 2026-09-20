@@ -31,6 +31,13 @@
   .step.on { display: block; animation: rise .35s ease-out; }
   @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .step.on { animation: none; } }
+  @media (orientation: landscape) {
+    body::before {
+      content: "Rotate to portrait mode to play / Draai je telefoon rechtop a.u.b.";
+      position: fixed; inset: 0; background: var(--bg); color: var(--ink); z-index: 99999;
+      display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; font-weight: bold; font-size: 1.2rem;
+    }
+  }
   button { appearance: none; border: 0; border-radius: 999px; background: var(--ball); color: #ffffff;
     font: inherit; font-weight: 700; padding: 15px 26px; margin: 10px 0 0; cursor: pointer; width: 100%; }
   button.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); font-weight: 500; }

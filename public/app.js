@@ -44,6 +44,8 @@ const params = new URLSearchParams(location.search);
 const skipGates = params.get('skipgates') === '1';
 const state = { user: null, pos: null, heading: null, headingSrc: '', armed: false, swReg: null };
 
+HAS.connect();
+
 function show(id) {
   document.querySelectorAll('.step').forEach((s) => s.classList.remove('on'));
   $(id).classList.add('on');
@@ -116,6 +118,14 @@ function gateSensors() {
 $('btn-sensors').addEventListener('click', async () => {
   $('sensors-err').textContent = '';
   try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const oriRes = await DeviceOrientationEvent.requestPermission();
+      if (oriRes !== 'granted') throw new Error('Compass permission denied');
+    }
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      const motRes = await DeviceMotionEvent.requestPermission();
+      if (motRes !== 'granted') throw new Error('Motion permission denied');
+    }
     const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 15000, maximumAge: 60000 }));
     const r = CONFIG.ROUND_DEG;
     state.pos = { lat: Math.round(pos.coords.latitude / r) * r, lon: Math.round(pos.coords.longitude / r) * r };
@@ -125,7 +135,7 @@ $('btn-sensors').addEventListener('click', async () => {
     startCompass();
     startMotion();
     setTimeout(() => gateHive(), 1000);
-  } catch (e) { $('sensors-err').textContent = e.message || 'Location failed.'; }
+  } catch (e) { $('sensors-err').textContent = e.message || 'Sensors failed.'; }
 });
 
 /* ---------- Gate 4: HiveAuth ---------- */
@@ -136,7 +146,6 @@ function gateHive() {
     return goHome();
   }
   show('s-hive');
-  HAS.connect();
 }
 
 HAS.on('auth_req', (uri) => {
@@ -267,7 +276,13 @@ $('btn-hive').addEventListener('click', async () => {
   if (!/^[a-z][a-z0-9\-.]{2,15}$/.test(name)) { $('hive-err').textContent = 'That is not a valid Hive name.'; return; }
   $('btn-hive').disabled = true;
   state.user = name;
-  HAS.auth(name);
+  try {
+    HAS.auth(name);
+  } catch (e) {
+    $('btn-hive').disabled = false;
+    $('hive-err').textContent = 'Connecting to HiveAuth... Please wait a second and try again.';
+    HAS.connect();
+  }
 });
 
 /* ---------- Home ---------- */
@@ -307,6 +322,8 @@ async function goHome() {
 
 /* ---------- Kompas ---------- */
 function startCompass() {
+  if (state.compassStarted) return;
+  state.compassStarted = true;
   const onOri = (e) => {
     let h = null, src = '';
     if (typeof e.webkitCompassHeading === 'number') { h = e.webkitCompassHeading; src = 'iOS'; }
@@ -326,6 +343,8 @@ function startCompass() {
 let peak = 0, peakHeading = null, peakAt = 0, lastMotion = 0, finishTimer = null;
 
 function startMotion() {
+  if (state.motionStarted) return;
+  state.motionStarted = true;
   window.addEventListener('devicemotion', (e) => {
     const a = e.acceleration && e.acceleration.x !== null ? e.acceleration : null;
     let mag;
@@ -461,7 +480,19 @@ function pickCatcher(from, brg, km) {
   gateInstall();
 })();
 
-$('btn-go-throw').addEventListener('click', () => {
+$('btn-go-throw').addEventListener('click', async () => {
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      await DeviceOrientationEvent.requestPermission();
+    }
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      await DeviceMotionEvent.requestPermission();
+    }
+  } catch (e) {
+    console.error('Permission denied', e);
+  }
+  startCompass();
+  startMotion();
   show('s-throw');
   // Trigger radar logic here
 });
