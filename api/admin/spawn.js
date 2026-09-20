@@ -13,7 +13,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { origin, msg, holder } = req.body;
+    const { origin, msg, holder, reset_block } = req.body;
+    
+    if (reset_block) {
+      await sql`INSERT INTO meta (k, v) VALUES ('last_block', ${reset_block.toString()}) ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v`;
+      return res.status(200).json({ success: true, message: `last_block reset to ${reset_block}` });
+    }
     
     // Get next seq
     const dbBalls = await sql`SELECT MAX(seq) as max_seq FROM balls`;
