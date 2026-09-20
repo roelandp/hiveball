@@ -21,5 +21,6 @@ export default async function handler(req, res) {
     }
   }
   
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.status(200).json({ player, ball: myBall, active: player.active });
 }

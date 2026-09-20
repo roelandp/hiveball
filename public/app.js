@@ -481,12 +481,12 @@ $('btn-catch').addEventListener('click', async () => {
 
 // Auto-refresh when app comes to foreground
 window.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && state.user && $('s-home').style.display !== 'none') {
+  if (document.visibilityState === 'visible' && state.user && $('s-home').classList.contains('on')) {
     goHome();
   }
 });
 window.addEventListener('focus', () => {
-  if (state.user && $('s-home').style.display !== 'none') {
+  if (state.user && $('s-home').classList.contains('on')) {
     goHome();
   }
 });
