@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   const bRes = await query(`SELECT id, name, color, state, holder, to_user FROM balls WHERE state IN ('spawned', 'in_flight', 'loose', 'held')`);
   let myBall = null;
   for (const b of bRes.rows) {
-    if (b.state === 'held' && b.holder === username) myBall = { ...b, role: 'holder' };
+    if ((b.state === 'held' || b.state === 'spawned') && b.holder === username) myBall = { ...b, role: 'holder' };
     else if (b.state === 'in_flight' && b.to_user === username) myBall = { ...b, role: 'incoming' };
     else if (b.state === 'loose') {
       // Need to check 'also' array from db, assuming we expand this later
